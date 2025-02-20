@@ -114,4 +114,4 @@ qm set $VMID --ciuser $CI_USER
 qm set $VMID --cipassword $(openssl passwd -6 $CI_PASSWORD) 
 qm set $VMID --sshkeys ~/.ssh/authorized_keys 
 qm set $VMID --ipconfig0 ip=dhcp 
-root@pve04:~# 
+rm noble-server-cloudimg-amd64.img
