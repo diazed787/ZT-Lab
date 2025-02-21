@@ -124,5 +124,7 @@ qm set $VMID --ciuser $CI_USER > /dev/null
 qm set $VMID --cipassword $(openssl passwd -6 $CI_PASSWORD) > /dev/null 
 qm set $VMID --sshkeys ~/.ssh/authorized_keys  > /dev/null
 qm set $VMID --ipconfig0 ip=dhcp  > /dev/null
+echo "Converting into a template..."
+qm template $VMID > /dev/null
 echo "Removing downloaded image..."
 rm noble-server-cloudimg-amd64.img > /dev/null
