@@ -49,6 +49,19 @@ then
 	echo "No Selection. Defaulting to $STORAGE"
 fi
 echo "Setting Storage Option to $STORAGE"
+read -p "Select desired disk size in G:[40]" DISKSIZE
+if [[ $DISKSIZE =~ ^$ ]]
+then
+	RESIZE=40
+	echo "No Selection. Resizing image to default value of $RESIZE""G"
+elif [[ $DISKSIZE =~ ^[0-9]*$ ]]
+then
+	RESIZE=$DISKSIZE
+	echo "Resizing image to $RESIZE""G"
+else
+	echo "No valid numeric selection. Try again"
+	exit
+fi
 read -p "Enter default cloud init user:[zsroot]" CI_INPUT 
 if [[ $CI_INPUT =~ ^$ ]]
 then
@@ -64,26 +77,13 @@ do
 	read -sp "Enter Password:" PWD_INPUT
  	CI_PASSWORD=$PWD_INPUT
 done
-echo ""
+echo "OK"
 echo "Account Password Set"
 echo ".................................................."
 echo "..Downloading Ubuntu Cloud image from repository.."
 echo ".................................................."
 wget -q https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img --show-progress
 echo "Now we have to resize the image to desired disk size"
-read -p "Select desired disk size in G:[40]" DISKSIZE
-if [[ $DISKSIZE =~ ^$ ]]
-then
-	RESIZE=40
-	echo "No Selection. Resizing image to default value of $RESIZE""G"
-elif [[ $DISKSIZE =~ ^[0-9]*$ ]]
-then
-	RESIZE=$DISKSIZE
-	echo "Resizing image to $RESIZE""G"
-else
-	echo "No valid numeric selection. Try again"
-	exit
-fi
 echo "Resizing OS image..."
 qemu-img resize noble-server-cloudimg-amd64.img $RESIZE"G" > /dev/null 
 echo "Creating VM..."
