@@ -3,7 +3,7 @@ echo "Please wait while we get environment details..."
 echo "Getting Existing VM IDs..."
 VMVALUES="$(qm list | awk '$1 ~ /^[0-9]*$/{ print $1 }')"
 echo "Getting configured storage objects..."
-STROPTIONS="$(cat /etc/pve/storage.cfg | grep : | awk '{print $2}')"
+STROPTIONS="$(mapfile STOR_FIND < <(cat /etc/pve/storage.cfg | grep : | awk '{print $2}') && echo ${STOR_FIND[@]})"
 #echo "Current VMID in use is: $VMVALUES"
 read -p "Input VMID as Integer:[1000000]" VMIDINPUT
 for VID in $VMVALUES
@@ -121,6 +121,11 @@ echo "........................"
 #	Need to insert check to ensure local
 #	storage supports snippets or the cloud init
 #	will not succeed. Must look in storage.cfg
+# - check file line numbers where storage objects are defined
+STR_LINES="$(mapfile STR_FIND  < <(cat /etc/pve/storage.cfg | grep -n : | cut -d : -f 1) && echo ${STR_FIND[@]})"
+# Check line number where local storage object is defined
+LOCAL_LINE="$(cat /etc/pve/storage.cfg | grep -n :\ local$ | cut -d : -f 1)"
+# - read between where the next storage object is defined local for "content" line and "snippets
 #######################################################
 #######################################################
 echo "Setting cloud init user and network settings..."
