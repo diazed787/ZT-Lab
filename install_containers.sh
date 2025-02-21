@@ -1,8 +1,8 @@
 #!/bin/bash
 echo "Checking if AppConnector is already running"
-COUNT="$(docker ps | grep zpa-connector | wc -l)"
-echo "App Connector count is $COUNT"
-if [ $COUNT -ne 0 ]
+AC_COUNT="$(docker ps | grep zpa-connector | wc -l)"
+echo "App Connector count is $AC_COUNT"
+if [ $AC_COUNT -ne 0 ]
 then
 	echo "AppConnector is already running"
 else
