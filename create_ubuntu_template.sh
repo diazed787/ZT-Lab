@@ -30,7 +30,7 @@ else
 	exit
 fi
 echo "Setting VMID ID to $VMID"
-echo "Valid storage options are [$STROPTIONS]"
+echo "Valid storage options are: [$STROPTIONS]"
 read -p "Select Storage Target:[local-lvm]" STRINPUT
 for SID in $STROPTIONS
 do
