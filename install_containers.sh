@@ -7,7 +7,7 @@ then
 	echo "AppConnector is already running"
 else
 	echo "Let's provision your AppConnector"
-	read -p "Enter ZPA Prov Key: " zpakey
+	read -p "Enter ZPA Prov Key: " ZPAKEY
 	docker pull zscaler/zpa-connector:latest.amd64
 	docker run -d --init \
 	--name zpa-connector \
@@ -18,6 +18,6 @@ else
 	--cap-add cap_sys_time \
 	--cap-add cap_sys_resource \
 	--restart always \
-	-e ZPA_PROVISION_KEY="$zpakey" \
+	-e ZPA_PROVISION_KEY="$ZPAKEY" \
 	zscaler/zpa-connector:latest.amd64
 fi
