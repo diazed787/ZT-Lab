@@ -74,6 +74,7 @@ fi
 CI_PASSWORD=""
 while [[ $CI_PASSWORD =~ ^$ ]]
 do
+	echo ""
 	read -sp "Enter Password:" PWD_INPUT
  	CI_PASSWORD=$PWD_INPUT
 done
