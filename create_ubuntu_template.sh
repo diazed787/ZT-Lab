@@ -80,9 +80,9 @@ do
 done
 echo "OK"
 echo "Account Password Set"
-echo ".................................................."
-echo "..Downloading Ubuntu Cloud image from repository.."
-echo ".................................................."
+echo "#......................................................#"
+echo "#....Downloading Ubuntu Cloud image from repository....#"
+echo "#......................................................#"
 wget -q https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img --show-progress
 echo "Now we have to resize the image to desired disk size"
 echo "Resizing OS image..."
@@ -116,6 +116,13 @@ runcmd:
     - reboot
 EOF
 echo "........................"
+#######################################################
+#######################################################
+#	Need to insert check to ensure local
+#	storage supports snippets or the cloud init
+#	will not succeed. Must look in storage.cnf
+#######################################################
+#######################################################
 echo "Setting cloud init user and network settings..."
 qm set $VMID --cicustom "vendor=local:snippets/vendor.yaml" > /dev/null 
 qm set $VMID --tags ubuntu-template,24.04,cloudinit  > /dev/null
