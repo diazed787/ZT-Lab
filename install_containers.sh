@@ -6,9 +6,15 @@ if [ $AC_COUNT -ne 0 ]
 then
 	echo "AppConnector is already running"
 else
-	echo "Let's provision your AppConnector"
-	read -p "Enter ZPA Prov Key: " ZPAKEY
-	docker pull zscaler/zpa-connector:latest.amd64
+ 	echo "Let's provision your AppConnector"
+ 	ZPAKEY=""
+	while [[ $ZPAKEY =~ ^$ ]]
+	do
+		echo ""
+		read -p "Enter ZPA Prov Key: " ZPAKEY
+	done
+ 	echo "Deploying AppConnector Container..."
+ 	docker pull zscaler/zpa-connector:latest.amd64
 	docker run -d --init \
 	--name zpa-connector \
 	--cap-add cap_net_admin \
@@ -19,5 +25,5 @@ else
 	--cap-add cap_sys_resource \
 	--restart always \
 	-e ZPA_PROVISION_KEY="$ZPAKEY" \
-	zscaler/zpa-connector:latest.amd64
+	zscaler/zpa-connector:latest.amd64 > /dev/null
 fi
