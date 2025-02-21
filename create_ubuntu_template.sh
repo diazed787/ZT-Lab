@@ -120,7 +120,7 @@ echo "........................"
 #######################################################
 #	Need to insert check to ensure local
 #	storage supports snippets or the cloud init
-#	will not succeed. Must look in storage.cnf
+#	will not succeed. Must look in storage.cfg
 #######################################################
 #######################################################
 echo "Setting cloud init user and network settings..."
