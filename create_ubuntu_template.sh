@@ -116,56 +116,45 @@ runcmd:
     - reboot
 EOF
 echo "........................"
-#######################################################
-#######################################################
-#	Need to insert check to ensure local
-#	storage supports snippets or the cloud init
-#	will not succeed. Must look in storage.cfg
-#	EVALUATE storage.cfg FILE AND LOOK FOR LINES DEFINING AN OBJECT
+#       EVALUATE storage.cfg FILE AND LOOK FOR LINES DEFINING AN OBJECT
 STORAGE_PARENT_LINES="$(cat /etc/pve/storage.cfg | grep -n : | cut -d : -f 1)"
-#	DUMP RESULTS INTO AN ARRAY
+#       DUMP RESULTS INTO AN ARRAY
 STORAGE_PARENT_INDEX=()
 for INDEX_ID in $STORAGE_PARENT_LINES
 do
-	STORAGE_PARENT_INDEX+=($INDEX_ID)
+        STORAGE_PARENT_INDEX+=($INDEX_ID)
 done
-#	DETERMINE RESULTING ARRAY LENGTH
+#       DETERMINE RESULTING ARRAY LENGTH
 STORAGE_INDEX_LENGTH=${#STORAGE_PARENT_INDEX[@]}
-#	GET LINE NUMBER WHERE local IS DEFINED
-LOCAL_LINE="$(cat /etc/pve/storage.cfg | grep -n :\ local$ | cut -d : -f 1)"
-#	DETERMINE INDEX NUMBER WHERE LINE EXIST AND ASSOCIATED LINE NUMBER
+#       GET LINE NUMBER WHERE local IS DEFINED
+LOCAL_BEGIN="$(cat /etc/pve/storage.cfg | grep -n :\ local$ | cut -d : -f 1)"
+#       DETERMINE INDEX NUMBER WHERE LINE EXIST AND ASSOCIATED LINE NUMBER
 LOCAL_INDEX=0
 for ITEM in "${STORAGE_PARENT_INDEX[@]}"
 do
-	if [[ $LOCAL_LINE -eq $ITEM ]]
-	then
-		break
-	else
-		((LOCAL_INDEX++))
-	fi
+        if [[ $LOCAL_BEGIN -eq $ITEM ]]
+        then
+                break
+        else
+                ((LOCAL_INDEX++))
+        fi
 done
-#	ESTABLISH LINES WERE CONFIGURATION BEGINS AND ENDS
-LOCAL_BEGIN=${STORAGE_PARENT_INDEX[$LOCAL_INDEX]}
+#       ESTABLISH LINES WERE CONFIGURATION BEGINS AND ENDS
 LOCAL_NEXT=${STORAGE_PARENT_INDEX[$((LOCAL_INDEX+1))]}
 LOCAL_END=$((LOCAL_NEXT-1))
-#	GRAB CONFIGURATION STRING ON RELEVANT LINES
-#LOCAL_CONFIG="$(sed -n $LOCAL_BEGIN","$LOCAL_END"p" /etc/pve/storage.cfg)"
+#       GRAB CONFIG FILE LINE THAT WOULD BE CHANGED IF SNIPPETS NOT ENABLED
+SED_LINE="$(awk "NR>=${LOCAL_BEGIN} &&  NR<=${LOCAL_END} && /content\ / {print NR}" /etc/pve/storagetest.cfg)"
+#       GRAB CONFIGURATION STRING ON RELEVANT LINES
 LOCAL_CONFIG="$(sed -n $LOCAL_BEGIN","$LOCAL_END"p" /etc/pve/storagetest.cfg)"
-#	CHECK IF SNIPPETS EXIST, IF NOT ADD IT
-##############################################
-echo $LOCAL_CONFIG
-if sed -n "/snippets/p" <<< $LOCAL_CONFIG 
-#	THIS CHECK ABOVE IS FAILING
+#       CHECK IF SNIPPETS EXIST, IF NOT ADD IT
+echo "Checking if local storage supports snippets..."
+if [[ "$LOCAL_CONFIG" == *snippets* ]]
 then
-	echo "Snippets are there"
+        echo "Snippets already supported. No action was needed"
 else
-	echo "Snippets are not there"
-	SED_LINE="$(grep -m "$((LOCAL_INDEX+2))" -n content /etc/pve/storagetest.cfg | cut -d : -f 1 | tail -1)"
-#        SED_LINE="$(grep -m "$((LOCAL_INDEX+2))" -n content /etc/pve/storage.cfg | cut -d : -f 1 | tail -1)"
-	sed -i "'"$SED_LINE"s/content\ /content\ snippets,/' /etc/pve/storagetest.cfg"
+        echo "Adding snippets to local storage definition..."
+        sed -i "${SED_LINE}s/content\ /content\ snippets,/" /etc/pve/storagetest.cfg
 fi
-#######################################################
-#######################################################
 echo "Setting cloud init user and network settings..."
 qm set $VMID --cicustom "vendor=local:snippets/vendor.yaml" > /dev/null 
 qm set $VMID --tags ubuntu-template,24.04,cloudinit  > /dev/null
