@@ -5,7 +5,7 @@ readarray -t VM_VALUES < <(qm list | awk '$1 ~ /^[0-9]*$/{ print $1 }')
 echo "Getting configured storage objects..."
 STROPTIONS="$(mapfile STOR_FIND < <(cat /etc/pve/storage.cfg | grep : | awk '{print $2}') && echo ${STOR_FIND[@]})"
 echo "VM IDs already in use are:[${VM_VALUES[@]}]"
-#	BEGIN INPUTS SECTION
+#       BEGIN INPUTS SECTION
 read -p "Input VMID as Integer:[1000000]" VMIDINPUT
 #       Check for no input
 if [[ $VMIDINPUT =~ ^$ ]]
@@ -21,7 +21,10 @@ do
                 VMDUP=1
         fi
 done
-if [[ $VMIDINPUT =~ ^[0-9]*$ && $VMIDINPUT -le 1000000 && $VMDUP -ne 1 ]]
+if [[ $VMIDINPUT =~ ^$ && $VMDUP -ne 1 ]]
+then
+        :
+elif [[ $VMIDINPUT =~ ^[0-9]*$ && $VMIDINPUT -le 1000000 && $VMDUP -ne 1 ]]
 then
         VMID="$VMIDINPUT"
         echo "Unique VMID Selected"
@@ -29,7 +32,7 @@ else
         echo "VMID entered is not a valid number. Please try again"
         exit
 fi
-echo "Setting VMID ID to $VMID"echo "Setting VMID ID to $VMID"
+echo "Setting VMID ID to $VMID"
 echo "Valid storage options are: [$STROPTIONS]"
 read -p "Select Storage Target:[local-lvm]" STRINPUT
 for SID in $STROPTIONS
@@ -37,50 +40,50 @@ do
         if [[ $STRINPUT -eq $SID ]]
         then
                 ISVALID=1
-	else
-		echo "The Selected Storage is not a valid option. Try again"
-		exit
+        else
+                echo "The Selected Storage is not a valid option. Try again"
+                exit
         fi
 done
 
 if [[ $STRINPUT =~ ^$ && $STROPTIONS =~ local-lvm ]]
 then
-	STORAGE="local-lvm"
-	echo "No Selection. Defaulting to $STORAGE"
+        STORAGE="local-lvm"
+        echo "No Selection. Defaulting to $STORAGE"
 fi
 echo "Setting Storage Option to $STORAGE"
 read -p "Select desired disk size in G:[40]" DISKSIZE
 if [[ $DISKSIZE =~ ^$ ]]
 then
-	RESIZE=40
-	echo "No Selection. Resizing image to default value of $RESIZE""G"
+        RESIZE=40
+        echo "No Selection. Resizing image to default value of $RESIZE""G"
 elif [[ $DISKSIZE =~ ^[0-9]*$ ]]
 then
-	RESIZE=$DISKSIZE
-	echo "Resizing image to $RESIZE""G"
+        RESIZE=$DISKSIZE
+        echo "Resizing image to $RESIZE""G"
 else
-	echo "No valid numeric selection. Try again"
-	exit
+        echo "No valid numeric selection. Try again"
+        exit
 fi
 read -p "Enter default cloud init user:[zsroot]" CI_INPUT 
 if [[ $CI_INPUT =~ ^$ ]]
 then
-	echo "No Selection. Defaulting to zsroot"
-	CI_USER="zsroot"
+        echo "No Selection. Defaulting to zsroot"
+        CI_USER="zsroot"
 else
-	echo "User will be $CI_INPUT"
-	CI_USER="$CI_INPUT"
+        echo "User will be $CI_INPUT"
+        CI_USER="$CI_INPUT"
 fi
 CI_PASSWORD=""
 while [[ $CI_PASSWORD =~ ^$ ]]
 do
-	echo ""
-	read -sp "Enter Password:" PWD_INPUT
- 	CI_PASSWORD=$PWD_INPUT
+        echo ""
+        read -sp "Enter Password:" PWD_INPUT
+        CI_PASSWORD=$PWD_INPUT
 done
 echo "OK"
 echo "Account Password Set"
-#	END INPUT SECTION
+#       END INPUT SECTION
 echo "#......................................................#"
 echo "#....Downloading Ubuntu Cloud image from repository....#"
 echo "#......................................................#"
@@ -96,6 +99,12 @@ qm create $VMID --name "ubuntu-2404-cloudinit-template" --ostype l26 \
     --cpu host --socket 1 --cores 2 \
     --vga serial0 --serial0 socket  \
     --net0 virtio,bridge=vmbr0,firewall=0 > /dev/null 
+####################################
+####################################
+####################################
+####################################
+####################################
+####################################
 echo "Importing Ubuntu Cloud resized image..."
 qm importdisk $VMID noble-server-cloudimg-amd64.img $STORAGE > /dev/null 
 echo "Setting additional hardware settings..."
