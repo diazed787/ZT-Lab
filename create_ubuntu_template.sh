@@ -3,84 +3,118 @@ echo "Please wait while we get environment details..."
 echo "Getting Existing VM IDs..."
 readarray -t VM_VALUES < <(qm list | awk '$1 ~ /^[0-9]*$/{ print $1 }')
 echo "Getting configured storage objects..."
-STROPTIONS="$(mapfile STOR_FIND < <(cat /etc/pve/storage.cfg | grep : | awk '{print $2}') && echo ${STOR_FIND[@]})"
-echo "VM IDs already in use are:[${VM_VALUES[@]}]"
-#       BEGIN INPUTS SECTION
-read -p "Input VMID as Integer:[1000000]" VMIDINPUT
-#       Check for no input
-if [[ $VMIDINPUT =~ ^$ ]]
-then
-        VMID=1000000
-        echo "No Selection. Defaulting to VMID $VMID"
-#       Check Selected VMID against existing values
-fi
-for VID in ${VM_VALUES[@]}
-do
-        if [[ $VMID -eq $VID ]]
-        then
-                VMDUP=1
-        fi
-done
-if [[ $VMIDINPUT =~ ^$ && $VMDUP -ne 1 ]]
-then
-        :
-elif [[ $VMIDINPUT =~ ^[0-9]*$ && $VMIDINPUT -le 1000000 && $VMDUP -ne 1 ]]
-then
-        VMID="$VMIDINPUT"
-        echo "Unique VMID Selected"
+readarray -t STROPTIONS < <(cat /etc/pve/storage.cfg | grep : | awk '{print $2}')
+echo "VM IDs already in use are: [${VM_VALUES[@]}]"
+
+# BEGIN INPUTS SECTION
+read -p "Input VMID as Integer: [1000000] " VMIDINPUT
+
+# Check for no input
+if [[ -z "$VMIDINPUT" ]]; then
+    VMID=1000000
+    echo "No Selection. Defaulting to VMID $VMID"
 else
-        echo "VMID entered is not a valid number. Please try again"
-        exit
+    VMID="$VMIDINPUT" #assign VMID here.
 fi
-echo "Setting VMID ID to $VMID"
-echo "Valid storage options are: [$STROPTIONS]"
-read -p "Select Storage Target:[local-lvm]" STRINPUT
-for SID in $STROPTIONS
-do
-        if [[ $STRINPUT -eq $SID ]]
-        then
-                ISVALID=1
-        else
-                echo "The Selected Storage is not a valid option. Try again"
-                exit
-        fi
+
+# Check Selected VMID against existing values
+VMDUP=0
+for VID in "${VM_VALUES[@]}"; do
+    if [[ "$VMID" -eq "$VID" ]]; then
+        VMDUP=1
+        break # Exit loop if duplicate found
+    fi
 done
 
-if [[ $STRINPUT =~ ^$ && $STROPTIONS =~ local-lvm ]]
-then
-        STORAGE="local-lvm"
-        echo "No Selection. Defaulting to $STORAGE"
-fi
-echo "Setting Storage Option to $STORAGE"
-read -p "Select desired disk size in G:[40]" DISKSIZE
-if [[ $DISKSIZE =~ ^$ ]]
-then
-        RESIZE=40
-        echo "No Selection. Resizing image to default value of $RESIZE""G"
-elif [[ $DISKSIZE =~ ^[0-9]*$ ]]
-then
-        RESIZE=$DISKSIZE
-        echo "Resizing image to $RESIZE""G"
+if [[ "$VMID" =~ ^[0-9]+$ ]] && [[ "$VMID" -ge 100 ]] && [[ "$VMID" -le 1000000 ]] && [[ "$VMDUP" -eq 0 ]]; then
+    echo "Unique VMID Selected"
 else
-        echo "No valid numeric selection. Try again"
-        exit
+    echo "VMID entered is not a valid number or is already in use. Please try again."
+    exit 1
 fi
-read -p "Enter default cloud init user:[zsroot]" CI_INPUT 
-if [[ $CI_INPUT =~ ^$ ]]
-then
-        echo "No Selection. Defaulting to zsroot"
-        CI_USER="zsroot"
+
+echo "Setting VMID ID to $VMID"
+echo "Valid storage options are: [${STROPTIONS[@]}]"
+read -p "Select Storage Target: [local-lvm] " STRINPUT
+
+# Check for no input
+if [[ -z "$STRINPUT" ]]; then
+    STORAGE="local-lvm"
 else
-        echo "User will be $CI_INPUT"
-        CI_USER="$CI_INPUT"
+    STORAGE="$STRINPUT"
 fi
-CI_PASSWORD=""
-while [[ $CI_PASSWORD =~ ^$ ]]
-do
-        echo ""
-        read -sp "Enter Password:" PWD_INPUT
-        CI_PASSWORD=$PWD_INPUT
+
+# Validate Storage input is valid
+ISVALID=0
+for SID in "${STROPTIONS[@]}"; do
+    if [[ "$STORAGE" == "$SID" ]]; then
+        ISVALID=1
+        break # Exit loop if valid storage found
+    fi
 done
+
+if [[ "$ISVALID" -eq 1 ]]; then
+    echo "Setting storage to $STORAGE"
+else
+    echo "Storage input is not valid. Please try again."
+    exit 1
+fi
+
+read -p "Select desired disk size in G: [40] " DISKSIZE
+if [[ -z "$DISKSIZE" ]]; then
+    RESIZE=40
+    echo "No Selection. Resizing image to default value of $RESIZE""G"
+elif [[ "$DISKSIZE" =~ ^[0-9]+$ ]]; then
+    RESIZE="$DISKSIZE"
+    echo "Resizing image to $RESIZE""G"
+else
+    echo "No valid numeric selection. Try again"
+    exit 1
+fi
+
+read -p "Enter default cloud init user: [zsroot] " CI_INPUT
+if [[ -z "$CI_INPUT" ]]; then
+    echo "No Selection. Defaulting to zsroot"
+    CI_USER="zsroot"
+else
+    echo "User will be $CI_INPUT"
+    CI_USER="$CI_INPUT"
+fi
+
+read_password() {
+    local PWD_1=""
+    local PWD_2=""
+    while true; do
+        read -s -p "Enter password: " PWD_1
+        echo ""
+        if [[ -z "$PWD_1" ]]; then
+            echo "Password cannot be blank. Please try again."
+            continue
+        fi
+        read -s -p "Confirm password: " PWD_2
+        echo ""
+        if [[ "$PWD_1" == "$PWD_2" ]]; then
+            break
+        else
+            echo "Passwords do not match. Please try again."
+        fi
+    done
+    echo "Password confirmed."
+    echo "$PWD_1" #return password.
+}
+
+CI_PASSWORD=$(read_password)
+echo "Done"
+echo "VM SUMMARY..."
+echo "VMID: $VMID"
+echo "Storage: $STORAGE"
+echo "Disk Size: $RESIZE"
+echo "Cloud Init User: $CI_USER"
+##############################
+##############################
+##############################
+##############################
+##############################
 echo "OK"
 echo "Account Password Set"
 #       END INPUT SECTION
