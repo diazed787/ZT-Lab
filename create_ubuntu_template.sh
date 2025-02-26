@@ -1,35 +1,35 @@
 #!/bin/bash
 echo "Please wait while we get environment details..."
 echo "Getting Existing VM IDs..."
-VMVALUES="$(qm list | awk '$1 ~ /^[0-9]*$/{ print $1 }')"
+readarray -t VM_VALUES < <(qm list | awk '$1 ~ /^[0-9]*$/{ print $1 }')
 echo "Getting configured storage objects..."
 STROPTIONS="$(mapfile STOR_FIND < <(cat /etc/pve/storage.cfg | grep : | awk '{print $2}') && echo ${STOR_FIND[@]})"
-#echo "Current VMID in use is: $VMVALUES"
+echo "VM IDs already in use are:[${VM_VALUES[@]}]"
+#	BEGIN INPUTS SECTION
 read -p "Input VMID as Integer:[1000000]" VMIDINPUT
-for VID in $VMVALUES
-do
-	if [[ $VMIDINPUT -eq $VID ]]
-	then
-		VMDUP=1
-#		echo "The Selected VMID is already in use"
-#	else
-#		VMDUP=0
-#		echo "The Selected VMID is available"
-	fi
-done
+#       Check for no input
 if [[ $VMIDINPUT =~ ^$ ]]
 then
-	VMID=1000000
-	echo "No Selection. Defaulting to VMID $VMID"
-elif [[ $VMIDINPUT =~ ^[0-9]*$ && $VMIDINPUT -le 1000000 && $VMDUP -ne 1 ]]
-then
-	VMID="$VMIDINPUT"
-	echo "Unique VMID Selected"
-else
-	echo "VMID entered is not a valid number. Please try again"
-	exit
+        VMID=1000000
+        echo "No Selection. Defaulting to VMID $VMID"
+#       Check Selected VMID against existing values
 fi
-echo "Setting VMID ID to $VMID"
+for VID in ${VM_VALUES[@]}
+do
+        if [[ $VMID -eq $VID ]]
+        then
+                VMDUP=1
+        fi
+done
+if [[ $VMIDINPUT =~ ^[0-9]*$ && $VMIDINPUT -le 1000000 && $VMDUP -ne 1 ]]
+then
+        VMID="$VMIDINPUT"
+        echo "Unique VMID Selected"
+else
+        echo "VMID entered is not a valid number. Please try again"
+        exit
+fi
+echo "Setting VMID ID to $VMID"echo "Setting VMID ID to $VMID"
 echo "Valid storage options are: [$STROPTIONS]"
 read -p "Select Storage Target:[local-lvm]" STRINPUT
 for SID in $STROPTIONS
@@ -80,6 +80,7 @@ do
 done
 echo "OK"
 echo "Account Password Set"
+#	END INPUT SECTION
 echo "#......................................................#"
 echo "#....Downloading Ubuntu Cloud image from repository....#"
 echo "#......................................................#"
