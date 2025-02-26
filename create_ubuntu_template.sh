@@ -126,12 +126,6 @@ qm create $VMID --name "ubuntu-2404-cloudinit-template" --ostype l26 \
     --cpu host --socket 1 --cores 2 \
     --vga serial0 --serial0 socket  \
     --net0 virtio,bridge=vmbr0,firewall=0 > /dev/null 
-####################################
-####################################
-####################################
-####################################
-####################################
-####################################
 echo "Importing Ubuntu Cloud resized image..."
 qm importdisk $VMID noble-server-cloudimg-amd64.img $STORAGE > /dev/null 
 echo "Setting additional hardware settings..."
@@ -200,9 +194,9 @@ qm set $VMID --cicustom "vendor=local:snippets/vendor.yaml" > /dev/null
 qm set $VMID --tags ubuntu-template,24.04,cloudinit  > /dev/null
 echo "Configuring credentials..."
 qm set $VMID --ciuser $CI_USER > /dev/null 
-qm set $VMID --cipassword $(openssl passwd -6 $CI_PASSWORD) > /dev/null 
-qm set $VMID --sshkeys ~/.ssh/authorized_keys  > /dev/null
-qm set $VMID --ipconfig0 ip=dhcp  > /dev/null
+qm set $VMID --cipassword $(openssl passwd -6 "$CI_PASSWORD") > /dev/null 
+qm set $VMID --sshkeys ~/.ssh/authorized_keys > /dev/null
+qm set $VMID --ipconfig0 ip=dhcp > /dev/null
 echo "Converting into a template..."
 qm template $VMID > /dev/null
 echo "Removing downloaded image..."
