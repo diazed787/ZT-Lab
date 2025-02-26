@@ -117,6 +117,7 @@ runcmd:
 EOF
 echo "........................"
 #       EVALUATE storage.cfg FILE AND LOOK FOR LINES DEFINING AN OBJECT
+#       EVALUATE storage.cfg FILE AND LOOK FOR LINES DEFINING AN OBJECT
 STORAGE_PARENT_LINES="$(cat /etc/pve/storage.cfg | grep -n : | cut -d : -f 1)"
 #       DUMP RESULTS INTO AN ARRAY
 STORAGE_PARENT_INDEX=()
@@ -145,15 +146,18 @@ LOCAL_END=$((LOCAL_NEXT-1))
 #       GRAB CONFIG FILE LINE THAT WOULD BE CHANGED IF SNIPPETS NOT ENABLED
 SED_LINE="$(awk "NR>=${LOCAL_BEGIN} &&  NR<=${LOCAL_END} && /content\ / {print NR}" /etc/pve/storagetest.cfg)"
 #       GRAB CONFIGURATION STRING ON RELEVANT LINES
-LOCAL_CONFIG="$(sed -n $LOCAL_BEGIN","$LOCAL_END"p" /etc/pve/storagetest.cfg)"
+LOCAL_CONFIG="$(sed -n $LOCAL_BEGIN","$LOCAL_END"p" /etc/pve/storage.cfg)"
 #       CHECK IF SNIPPETS EXIST, IF NOT ADD IT
 echo "Checking if local storage supports snippets..."
 if [[ "$LOCAL_CONFIG" == *snippets* ]]
 then
         echo "Snippets already supported. No action was needed"
 else
+        echo "Creating backup of storage configuration file..."
+        cp /etc/pve/storage.cfg etc/pve/storage.cfg.bkup
         echo "Adding snippets to local storage definition..."
-        sed -i "${SED_LINE}s/content\ /content\ snippets,/" /etc/pve/storagetest.cfg
+        sed -i "${SED_LINE}s/content\ /content\ snippets,/" /etc/pve/storage.cfg
+        systemctl restart pvestorage
 fi
 echo "Setting cloud init user and network settings..."
 qm set $VMID --cicustom "vendor=local:snippets/vendor.yaml" > /dev/null 
