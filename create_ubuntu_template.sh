@@ -110,13 +110,6 @@ echo "VMID: $VMID"
 echo "Storage: $STORAGE"
 echo "Disk Size: $RESIZE"
 echo "Cloud Init User: $CI_USER"
-##############################
-##############################
-##############################
-##############################
-##############################
-echo "OK"
-echo "Account Password Set"
 #       END INPUT SECTION
 echo "#......................................................#"
 echo "#....Downloading Ubuntu Cloud image from repository....#"
