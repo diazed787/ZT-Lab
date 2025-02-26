@@ -127,7 +127,6 @@ runcmd:
 EOF
 echo "........................"
 #       EVALUATE storage.cfg FILE AND LOOK FOR LINES DEFINING AN OBJECT
-#       EVALUATE storage.cfg FILE AND LOOK FOR LINES DEFINING AN OBJECT
 STORAGE_PARENT_LINES="$(cat /etc/pve/storage.cfg | grep -n : | cut -d : -f 1)"
 #       DUMP RESULTS INTO AN ARRAY
 STORAGE_PARENT_INDEX=()
