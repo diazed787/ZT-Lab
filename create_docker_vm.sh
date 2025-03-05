@@ -10,6 +10,8 @@ else
 	echo "Installing JQ..."
 	apt install -y jq > /dev/null
 fi
+echo "Grabbing Proxmox Hostname"
+HOSTNAME=$(pvesh get /cluster/status --output-format json|jq -r '.[]|.name')
 echo "Grabbing available VM templates"
 echo "........."
 #	Get next available VM ID in case there is no selection
@@ -71,9 +73,12 @@ do
 	if [[ -n "$template_vmid" ]]
 	then
 		echo "You selected: $template_vmid"
-		#pvesh create clone $template_vmid $NEWVM_ID $NEWVM_NAME --full
+		pvesh create /nodes/"$HOSTNAME"/qemu/"$template_vmid"/clone --newid "$NEWVM_ID" --full 1
+		pvesh set /nodes/"$HOSTNAME"/qemu/"$NEWVM_ID"/set --name "$NEWVM_NAME"
 		break
 	else
 		echo "Invalid selection."
 	fi
 done
+
+##### BEGIN DOCKER INSTALL PROCESS
