@@ -82,3 +82,4 @@ do
 done
 
 ##### BEGIN DOCKER INSTALL PROCESS
+qm start "$NEWVM_ID"
