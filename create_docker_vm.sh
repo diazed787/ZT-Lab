@@ -74,7 +74,7 @@ do
 	then
 		echo "You selected: $template_vmid"
 		pvesh create /nodes/"$HOSTNAME"/qemu/"$template_vmid"/clone --newid "$NEWVM_ID" --full 1
-		pvesh set /nodes/"$HOSTNAME"/qemu/"$NEWVM_ID"/set --name "$NEWVM_NAME"
+		pvesh set /nodes/"$HOSTNAME"/qemu/"$NEWVM_ID"/config --name "$NEWVM_NAME"
 		break
 	else
 		echo "Invalid selection."
