@@ -83,3 +83,7 @@ done
 
 ##### BEGIN DOCKER INSTALL PROCESS
 qm start "$NEWVM_ID"
+
+####	Build Check to ensure Cloud Init completed and QEMU agent is running
+
+###	Docker install process
